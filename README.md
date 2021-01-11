@@ -107,3 +107,12 @@ The imagedata is then accessed as the array `IMAGEDATA`. Here is some example co
   
   display.display();
   ```
+
+  ## Running Tests
+
+  The unit tests are run with the following command:
+
+  ```
+  cd python
+  python -m pytest
+  ```
