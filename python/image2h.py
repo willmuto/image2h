@@ -28,6 +28,41 @@ def parse_args():
 
    return parser.parse_args()
 
+def image_data_to_str(image_data, invert=False, 
+                           has_alpha=False, verbose=False):
+   """
+   Converts a PIL.Image object to a data string that is then added to the
+   header file. String is hex values, lines terminated by "0x0a,\n"
+
+   :param image_data PIL.Image: 
+   :param invert bool: Invert the on/off colors in the returned data string.
+   :param has_alpha bool: True of the image uses an alpha channel.
+   :param verbose bool: Enable additional debug output.
+   :return: A string of hex values.
+   :rtype str:
+   """
+   on = 1 if invert else 0
+   off = 0 if invert else 1
+
+   check_color = (255, 255, 255, 255) if has_alpha else (255, 255, 255)
+
+   line = []
+   data = ""
+   for i, d in enumerate(image_data.getdata()):
+         if verbose:
+            print(i, d)
+
+         if d == check_color:
+            line.append(hex(on))
+         else:
+            line.append(hex(off))
+
+         col = i + 1 
+         if col % float(image_data.width) == 0:
+            data = "".join([data, ','.join(line), ',0x0a,\n'])
+            line = []
+
+   return data
 
 def main():
    args = parse_args()
@@ -37,30 +72,9 @@ def main():
    except IOError:
       print("Unable to load {}".format(args.input))
 
-   on = 1 if args.invert else 0
-   off = 0 if args.invert else 1
-
-   check_color = (255, 255, 255, 255) if args.alpha else (255, 255, 255)
-
    with open(args.output, 'w') as f:
-      line = []
-      data = ""
-
-      for i, d in enumerate(im.getdata()):
-         if args.verbose:
-            print(i, d)
-
-         if d == check_color:
-            line.append(hex(on))
-         else:
-            line.append(hex(off))
-
-         col = i + 1 
-         if col % float(im.width) == 0:
-            data = "".join([data, ','.join(line), ',0x0a,\n'])
-            line = []
-
-      f.write(TEMPLATE.format(data))
+      data_str = image_data_to_str(im, args.invert, args.alpha, args.verbose)
+      f.write(TEMPLATE.format(data_str))
 
    print("wrote {}".format(args.output))
 
