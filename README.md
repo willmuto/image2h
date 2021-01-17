@@ -9,13 +9,13 @@
 ## Usage
 
 To run the command:
-```
+```bash
 image2h.py [input] [output]
 ```
 where input is an image format [supported by Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html) and output is a .h file.
 
 The command also provides the following options:
-```
+```bash
 --invert           # Swap on/off values 
 --alpha            # Use when input image has alpha 
 --verbose          # Per-pixel debugging info
@@ -25,7 +25,7 @@ The command also provides the following options:
 
 For a 4x4 checkerboard, the output will look something like this:
 
-```
+```cpp
 #ifndef _IMGDATA_H_
 #define _IMGDATA_H_
 
@@ -43,7 +43,7 @@ Any pixel that is pure white will be on (`0x1`) and any other color will be off 
 
 Using the `--invert` flag, the on and off values will be flipped:
 
-```
+```cpp
 #ifndef _IMGDATA_H_
 #define _IMGDATA_H_
 
@@ -61,13 +61,13 @@ const byte IMAGEDATA[] = {
 
 When you add the .h image to your Arduino sketch, you can then include it.
 
-```
+```cpp
 #include "myimage.h"
 ```
 
 The imagedata is then accessed as the array `IMAGEDATA`. Here is some example code for displaying the image on a CircuitPlayground e-ink display:
 
-```
+```cpp
   display.clearBuffer();
   display.fillScreen(EPD_WHITE);
 
@@ -108,11 +108,20 @@ The imagedata is then accessed as the array `IMAGEDATA`. Here is some example co
   display.display();
   ```
 
+  I have included a utility class which contains this logic, and the following code can be used instead:
+
+  ```cpp
+  #include "WMuto_EPDImage.h"
+
+  EPDImage epdImage = EPDImage();
+  epdImage.draw(IMAGEDATA, display);
+  ```
+
   ## Running Tests
 
   The unit tests are run with the following command:
 
-  ```
+  ```python
   cd python
   python -m pytest
   ```
