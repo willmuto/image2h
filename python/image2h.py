@@ -24,12 +24,13 @@ def parse_args():
 
    parser.add_argument('-i', '--invert', action='store_true', help='Invert on/off values')
    parser.add_argument('-a', '--alpha', action='store_true', help='Image has alpha channel')
+   parser.add_argument('-s', '--secondary', type=int, nargs='+', help='Specify secondary color if supported by display.')
    parser.add_argument('-v', '--verbose', action='store_true', help='Per-pixel debugging output.')
 
    return parser.parse_args()
 
 def image_data_to_str(image_data, invert=False, 
-                           has_alpha=False, verbose=False):
+                      has_alpha=False, secondary=None, verbose=False):
    """
    Converts a PIL.Image object to a data string that is then added to the
    header file. String is hex values, lines terminated by "0x0a,\n"
@@ -37,6 +38,7 @@ def image_data_to_str(image_data, invert=False,
    :param image_data PIL.Image: 
    :param invert bool: Invert the on/off colors in the returned data string.
    :param has_alpha bool: True of the image uses an alpha channel.
+   :param secondary tuple: RGB[A] of secondary color 
    :param verbose bool: Enable additional debug output.
    :return: A string of hex values.
    :rtype str:
@@ -54,6 +56,8 @@ def image_data_to_str(image_data, invert=False,
 
          if d == check_color:
             line.append(hex(on))
+         elif secondary and secondary == d:
+            line.append(hex(2))
          else:
             line.append(hex(off))
 
@@ -72,8 +76,21 @@ def main():
    except IOError:
       print("Unable to load {}".format(args.input))
 
+   if args.secondary:
+      if len(args.secondary) == 1:
+         args.secondary = tuple([args.secondary[0], args.secondary[0], args.secondary[0]])
+      elif len(args.secondary) == 2:
+         args.secondary = tuple([args.secondary[0], args.secondary[1], 0])
+      elif len(args.secondary) == 3:
+         args.secondary = tuple([args.secondary[0], args.secondary[1], args.secondary[2]])
+      elif len(args.secondary) == 4:
+         args.secondary = tuple(args.secondary)
+      else:
+         print("Error: Unsupported number of values for secondary color.")
+         return
+
    with open(args.output, 'w') as f:
-      data_str = image_data_to_str(im, args.invert, args.alpha, args.verbose)
+      data_str = image_data_to_str(im, args.invert, args.alpha, args.secondary, args.verbose)
       f.write(TEMPLATE.format(data_str))
 
    print("wrote {}".format(args.output))
