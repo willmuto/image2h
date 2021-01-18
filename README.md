@@ -18,6 +18,7 @@ The command also provides the following options:
 ```bash
 --invert           # Swap on/off values 
 --alpha            # Use when input image has alpha 
+--secondary        # Specify which additional color is encoded (0-255)
 --verbose          # Per-pixel debugging info
 ```
 
@@ -30,16 +31,16 @@ For a 4x4 checkerboard, the output will look something like this:
 #define _IMGDATA_H_
 
 const byte IMAGEDATA[] = {
-0x1,0x1,0x0,0x0,0x0a,
-0x1,0x1,0x0,0x0,0x0a,
-0x0,0x0,0x1,0x1,0x0a,
-0x0,0x0,0x1,0x1,0x0a,
-
+0x2,0x2,0x1,0x1,0x0a,
+0x2,0x2,0x1,0x1,0x0a,
+0x1,0x1,0x2,0x2,0x0a,
+0x1,0x1,0x2,0x2,0x0a,
+0x0
 };
 #endif
 ```
 
-Any pixel that is pure white will be on (`0x1`) and any other color will be off (`0x0`). A sentinel value (`0x0a`) is used to encode the width of the image.
+Any pixel that is pure white will be on (`0x2`) and any other color will be off (`0x1`). A sentinel value (`0x0a`) is used to encode the width of the image, with `0x0` specifying the end of the file.
 
 Using the `--invert` flag, the on and off values will be flipped:
 
@@ -48,13 +49,21 @@ Using the `--invert` flag, the on and off values will be flipped:
 #define _IMGDATA_H_
 
 const byte IMAGEDATA[] = {
-0x0,0x0,0x1,0x1,0x0a,
-0x0,0x0,0x1,0x1,0x0a,
-0x1,0x1,0x0,0x0,0x0a,
-0x1,0x1,0x0,0x0,0x0a,
-
+0x1,0x1,0x2,0x2,0x0a,
+0x1,0x1,0x2,0x2,0x0a,
+0x2,0x2,0x1,0x1,0x0a,
+0x2,0x2,0x1,0x1,0x0a,
+0x0
 };
 #endif
+```
+
+If the display supports a secondary color, you can specify a color with `--secondary`, which be encoded with  `0x3`.
+
+```python
+--secondary 127         # middle grey, shortand for 127 127 127
+--secondary 255 0 0     # red
+--secondary 255 0 0 255 # red with alpha
 ```
 
 ## Reading in Arduino
@@ -65,50 +74,9 @@ When you add the .h image to your Arduino sketch, you can then include it.
 #include "myimage.h"
 ```
 
-The imagedata is then accessed as the array `IMAGEDATA`. Here is some example code for displaying the image on a CircuitPlayground e-ink display:
+The imagedata is then accessed as the array `IMAGEDATA`. 
 
-```cpp
-  display.clearBuffer();
-  display.fillScreen(EPD_WHITE);
-
-  /* Determine the width of the image */
-  int imgWidth = 0;
-  while (true) {
-    char eol = IMAGEDATA[imgWidth];
-    if (imgWidth > 10000) {
-      // If for some reason the width of the image
-      // cannot be determined, quit after 10k pixels
-      return;
-    }
-    if (eol == 0x0a) {
-      break;
-    }
-    imgWidth++;
-  }
-
-  /* Determine crop */
-  int width;
-  if (display.width() < imgWidth) {
-    width = display.width();
-  } else {
-    width = imgWidth;
-  }
-
-  /* Draw */
-  for (int i = 0; i < display.height(); i++) {
-    for (int j = width; j > 0; j--) {
-      // This is reversed due to the e-ink display
-      // where 0,0 is top-right, not top-left.
-      if (IMAGEDATA[j + (i * imgWidth) + i] == 1) {
-        display.drawPixel(i, width - j, EPD_BLACK);
-      }
-    }
-  }
-  
-  display.display();
-  ```
-
-  I have included a utility class which contains this logic, and the following code can be used instead:
+I have included a utility class for displaying this `IMAGEDATA` on an `Adafruit_EPD` display after it has been initialized:
 
   ```cpp
   #include "WMuto_EPDImage.h"
