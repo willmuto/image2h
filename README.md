@@ -117,6 +117,12 @@ The imagedata is then accessed as the array `IMAGEDATA`. Here is some example co
   epdImage.draw(IMAGEDATA, display);
   ```
 
+  The image can be shifted in the display by setting the offset before the `draw()` command (in pixels):
+
+  ```cpp
+  epdImage.setOffset(10, -20); // offset 10 in x, -20 in y
+  ```
+
   ## Running Tests
 
   The unit tests are run with the following command:
