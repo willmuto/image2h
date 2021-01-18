@@ -52,7 +52,7 @@ void EPDImage::draw(const byte imageData[], Adafruit_EPD & display)
     uint16_t color;
     for (int i = 0; i < display.height(); i++)
     {
-        for (int j = width; j > 0; j--) 
+        for (int j = imgWidth; j > 0; j--) 
         {
             if (imageData[j + (i * imgWidth) + i] == 1) 
             {

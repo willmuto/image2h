@@ -43,8 +43,8 @@ def image_data_to_str(image_data, invert=False,
    :return: A string of hex values.
    :rtype str:
    """
-   on = 1 if invert else 0
-   off = 0 if invert else 1
+   on = 2 if invert else 1
+   off = 1 if invert else 2
 
    check_color = (255, 255, 255, 255) if has_alpha else (255, 255, 255)
 
@@ -57,7 +57,7 @@ def image_data_to_str(image_data, invert=False,
          if d == check_color:
             line.append(hex(on))
          elif secondary and secondary == d:
-            line.append(hex(2))
+            line.append(hex(3))
          else:
             line.append(hex(off))
 
@@ -65,6 +65,8 @@ def image_data_to_str(image_data, invert=False,
          if col % float(image_data.width) == 0:
             data = "".join([data, ','.join(line), ',0x0a,\n'])
             line = []
+
+   data = "{}0x0".format(data)
 
    return data
 
