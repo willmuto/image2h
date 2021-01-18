@@ -18,7 +18,11 @@ class EPDImage
         int getWidth(const byte imageData[]);
         int getHeight(const byte imageData[]);
 
+        void setOffset(const int x, const int y);
+
     private:
+        int _offsetX;
+        int _offsetY;
         
 };
 

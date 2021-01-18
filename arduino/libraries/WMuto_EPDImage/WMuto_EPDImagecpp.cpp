@@ -15,7 +15,10 @@
 #define C2  0x2     // Color A
 #define C3  0x3     // Color B
 
-EPDImage::EPDImage() {}
+EPDImage::EPDImage() {
+    _offsetX = 0;
+    _offsetY = 0;
+}
 
 int EPDImage::getWidth(const byte imageData[])
 {
@@ -73,6 +76,12 @@ int EPDImage::getHeight(const byte imageData[])
     return height;
 }
 
+void EPDImage::setOffset(const int x, const int y)
+{
+    _offsetX = x;
+    _offsetY = y;
+}
+
 void EPDImage::draw(const byte imageData[], Adafruit_EPD & display)
 {
     int imgWidth = getWidth(imageData);
@@ -102,11 +111,11 @@ void EPDImage::draw(const byte imageData[], Adafruit_EPD & display)
         {
             if (imageData[j + (i * imgWidth) + i] == C2) 
             {
-                display.drawPixel(i, width - j, EPD_BLACK);
+                display.drawPixel(i + _offsetY, width - j + _offsetX, EPD_BLACK);
             }
             else if (imageData[j + (i * imgWidth) + i] == C3)
             {
-                display.drawPixel(i, width - j, EPD_RED);
+                display.drawPixel(i + _offsetY, width - j + _offsetX, EPD_RED);
             }
         }
     }
