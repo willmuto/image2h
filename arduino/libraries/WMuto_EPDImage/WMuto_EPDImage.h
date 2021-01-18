@@ -14,7 +14,9 @@ class EPDImage
     public: 
         EPDImage();
         void draw(const byte imageData[], Adafruit_EPD & display);
+        int getSize(const byte imageData[]);
         int getWidth(const byte imageData[]);
+        int getHeight(const byte imageData[]);
 
     private:
         
