@@ -82,6 +82,91 @@ void EPDImage::setOffset(const int x, const int y)
     _offsetY = y;
 }
 
+void EPDImage::draw(const byte imageData[], Adafruit_EPD & display, const int startX,
+                    const int startY, const int endX, const int endY)
+{
+    int imgWidth = getWidth(imageData);
+    int imgHeight = getHeight(imageData);
+
+    int drawStartX;
+    int drawStartY;
+    int drawEndX;
+    int drawEndY;
+
+    if (startX < 0)
+    {
+        drawStartX = 0;
+    }
+    else
+    {
+        drawStartX = startX;
+    }
+
+    if (startY < 0)
+    {
+        drawStartY = 0;
+    }
+    else
+    {
+        drawStartY = startY;
+    }
+
+    if (endX > imgWidth)
+    {
+        drawEndX = imgWidth;
+    }
+    else
+    {
+        drawEndX = endX;
+    }
+    
+    if (endY > imgHeight)
+    {
+        drawEndY = imgHeight;
+    }
+    else
+    {
+        drawEndY = endY;
+    }
+
+    int width;
+    if (display.width() < imgWidth) {
+        width = display.width();
+    } 
+    else 
+    {
+        width = imgWidth;
+    }
+
+    int height;
+    if (display.height() < imgHeight) {
+        height = display.height();
+    } 
+    else
+    {
+        height = imgHeight;
+    }
+
+
+
+    for (int i = startY; i < endY; i++)
+    {
+        for (int j = endX; j > startX; j--) 
+        {
+            if (imageData[j + (i * imgWidth) + i] == C2) 
+            {
+                display.drawPixel(i + _offsetY, width - j + _offsetX, EPD_BLACK);
+            }
+            else if (imageData[j + (i * imgWidth) + i] == C3)
+            {
+                display.drawPixel(i + _offsetY, width - j + _offsetX, EPD_RED);
+            }
+        }
+    }
+
+    return;
+}
+
 void EPDImage::draw(const byte imageData[], Adafruit_EPD & display)
 {
     int imgWidth = getWidth(imageData);
@@ -105,20 +190,7 @@ void EPDImage::draw(const byte imageData[], Adafruit_EPD & display)
         height = imgHeight;
     }
     
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = imgWidth; j > 0; j--) 
-        {
-            if (imageData[j + (i * imgWidth) + i] == C2) 
-            {
-                display.drawPixel(i + _offsetY, width - j + _offsetX, EPD_BLACK);
-            }
-            else if (imageData[j + (i * imgWidth) + i] == C3)
-            {
-                display.drawPixel(i + _offsetY, width - j + _offsetX, EPD_RED);
-            }
-        }
-    }
+    draw(imageData, display, 0, 0, width, height);
 
     return;
 }
