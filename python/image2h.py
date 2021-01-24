@@ -9,6 +9,12 @@ import sys
 import argparse
 from PIL import Image
 
+C1 = '0x1'
+C2 = '0x2'
+C3 = '0x3'
+EOL = '0x0a'
+EOF = '0x0'
+
 TEMPLATE = '''#ifndef _IMGDATA_H_
 #define _IMGDATA_H_
 
@@ -24,13 +30,14 @@ def parse_args():
 
    parser.add_argument('-i', '--invert', action='store_true', help='Invert on/off values')
    parser.add_argument('-a', '--alpha', action='store_true', help='Image has alpha channel')
-   parser.add_argument('-s', '--secondary', type=int, nargs='+', help='Specify secondary color if supported by display.')
+   parser.add_argument('-p', '--primary', type=int, nargs='+', default=[255, 255, 255], help='Specify primary color. Default: (%(default)s)')
+   parser.add_argument('-s', '--secondary', type=int, nargs='+', default=[], help='Specify secondary color if supported by display.')
    parser.add_argument('-v', '--verbose', action='store_true', help='Per-pixel debugging output.')
 
    return parser.parse_args()
 
-def image_data_to_str(image_data, invert=False, 
-                      has_alpha=False, secondary=None, verbose=False):
+def image_data_to_str(image_data,invert=False, has_alpha=False, primary=[255, 255, 255],
+                      secondary=[], verbose=False):
    """
    Converts a PIL.Image object to a data string that is then added to the
    header file. String is hex values, lines terminated by "0x0a,\n"
@@ -38,15 +45,23 @@ def image_data_to_str(image_data, invert=False,
    :param image_data PIL.Image: 
    :param invert bool: Invert the on/off colors in the returned data string.
    :param has_alpha bool: True of the image uses an alpha channel.
-   :param secondary tuple: RGB[A] of secondary color 
+   :param primary list: RGB of primary color
+   :param secondary list: RGB of secondary color 
    :param verbose bool: Enable additional debug output.
    :return: A string of hex values.
    :rtype str:
    """
-   on = 2 if invert else 1
-   off = 1 if invert else 2
+   on = C2 if invert else C1
+   off = C1 if invert else C2
 
-   check_color = (255, 255, 255, 255) if has_alpha else (255, 255, 255)
+   if has_alpha:
+      primary = primary + [255]
+
+      if secondary:
+         secondary = secondary + [255]
+
+   primary = tuple(primary)
+   secondary = tuple(secondary)
 
    line = []
    data = ""
@@ -54,19 +69,19 @@ def image_data_to_str(image_data, invert=False,
          if verbose:
             print(i, d)
 
-         if d == check_color:
-            line.append(hex(on))
-         elif secondary and secondary == d:
-            line.append(hex(3))
+         if d == primary:
+            line.append(on)
+         elif secondary and d == secondary:
+            line.append(C3)
          else:
-            line.append(hex(off))
+            line.append(off)
 
          col = i + 1 
          if col % float(image_data.width) == 0:
-            data = "".join([data, ','.join(line), ',0x0a,\n'])
+            data = "".join([data, ','.join(line), ',', EOL, ',\n'])
             line = []
 
-   data = "{}0x0".format(data)
+   data = "{}{}".format(data, EOF)
 
    return data
 
@@ -80,19 +95,20 @@ def main():
 
    if args.secondary:
       if len(args.secondary) == 1:
-         args.secondary = tuple([args.secondary[0], args.secondary[0], args.secondary[0]])
+         args.secondary = [args.secondary[0], args.secondary[0], args.secondary[0]]
       elif len(args.secondary) == 2:
-         args.secondary = tuple([args.secondary[0], args.secondary[1], 0])
+         args.secondary = [args.secondary[0], args.secondary[1], 0]
       elif len(args.secondary) == 3:
-         args.secondary = tuple([args.secondary[0], args.secondary[1], args.secondary[2]])
+         args.secondary = [args.secondary[0], args.secondary[1], args.secondary[2]]
       elif len(args.secondary) == 4:
-         args.secondary = tuple(args.secondary)
+         args.secondary = args.secondary
       else:
          print("Error: Unsupported number of values for secondary color.")
          return
 
    with open(args.output, 'w') as f:
-      data_str = image_data_to_str(im, args.invert, args.alpha, args.secondary, args.verbose)
+      data_str = image_data_to_str(im, args.invert, args.alpha, args.primary, 
+                                    args.secondary, args.verbose)
       f.write(TEMPLATE.format(data_str))
 
    print("wrote {}".format(args.output))
