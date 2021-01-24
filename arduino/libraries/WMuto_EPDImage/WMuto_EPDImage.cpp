@@ -2,6 +2,8 @@
     WMuto_EPDImage.cpp
     Utility class for displaying images on an Adafruit EPD
     Will Muto, 2021
+    License: Attribution 4.0
+    https://creativecommons.org/licenses/by/4.0/
 */
 
 #include <cstdlib> 
