@@ -85,6 +85,11 @@ I have included a utility class for displaying this `IMAGEDATA` on an `Adafruit_
   epdImage.draw(IMAGEDATA, display);
   ```
 
+  The `draw()` method also has the option to render a portion of the image by specifying the start and end coordinates. 
+  ```cpp
+  epdImage.draw(IMAGEDATA, display, startX, startY, endX, endY);
+  ```
+
   The image can be shifted in the display by setting the offset before the `draw()` command (in pixels):
 
   ```cpp
